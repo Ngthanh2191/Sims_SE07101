@@ -5,11 +5,11 @@ using WebSIMS.BDContext.Entities;
 
 namespace WebSIMS.Controllers
 {
-    public class CoursesController : Controller
+    public class CourseController : Controller
     {
         private readonly SIMSDBContext _context;
 
-        public CoursesController(SIMSDBContext context)
+        public CourseController(SIMSDBContext context)
         {
             _context = context;
         }
