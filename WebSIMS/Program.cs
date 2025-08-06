@@ -4,6 +4,8 @@ using WebSIMS.BDContext;
 using WebSIMS.Interfaces;
 using WebSIMS.Repositories;
 using WebSIMS.Services;
+using WebSIMS.Services.Implementations;
+using WebSIMS.Services.Interfaces;
 
 namespace WebSIMS
 {
@@ -21,6 +23,9 @@ namespace WebSIMS
 
             // Add services to the container.
             builder.Services.AddControllersWithViews();
+           
+            builder.Services.AddScoped<ICourseService, CourseService>();
+
             // cau hinh Authentication
             builder.Services.AddHttpContextAccessor();
             builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme).AddCookie(options =>

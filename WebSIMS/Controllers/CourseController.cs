@@ -1,27 +1,25 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using WebSIMS.BDContext;
+﻿// Controllers/CourseController.cs
+using Microsoft.AspNetCore.Mvc;
+using WebSIMS.Services.Interfaces;
 using WebSIMS.BDContext.Entities;
 
 namespace WebSIMS.Controllers
 {
     public class CourseController : Controller
     {
-        private readonly SIMSDBContext _context;
+        private readonly ICourseService _courseService;
 
-        public CourseController(SIMSDBContext context)
+        public CourseController(ICourseService courseService)
         {
-            _context = context;
+            _courseService = courseService;
         }
 
-        // =================== INDEX ===================
         public async Task<IActionResult> Index()
         {
-            var courses = await _context.CoursesDb.ToListAsync();
+            var courses = await _courseService.GetAllAsync();
             return View(courses);
         }
 
-        // =================== CREATE ===================
         public IActionResult Create() => View();
 
         [HttpPost]
@@ -30,16 +28,13 @@ namespace WebSIMS.Controllers
         {
             if (!ModelState.IsValid) return View(course);
 
-            course.CreatedAt = DateTime.Now;
-            _context.CoursesDb.Add(course);
-            await _context.SaveChangesAsync();
-            return RedirectToAction("Index");
+            await _courseService.AddAsync(course);
+            return RedirectToAction(nameof(Index));
         }
 
-        // =================== EDIT ===================
         public async Task<IActionResult> Edit(int id)
         {
-            var course = await _context.CoursesDb.FindAsync(id);
+            var course = await _courseService.GetByIdAsync(id);
             if (course == null) return NotFound();
 
             return View(course);
@@ -51,47 +46,13 @@ namespace WebSIMS.Controllers
         {
             if (!ModelState.IsValid) return View(course);
 
-            var existing = await _context.CoursesDb.FindAsync(course.CourseID);
-            if (existing == null) return NotFound();
-
-            // Cập nhật các field
-            existing.CourseCode = course.CourseCode;
-            existing.CourseName = course.CourseName;
-            existing.Description = course.Description;
-            existing.Credits = course.Credits;
-            existing.Department = course.Department;
-            existing.CreatedAt = DateTime.Now;
-
-            await _context.SaveChangesAsync();
-            return RedirectToAction("Index");
+            await _courseService.UpdateAsync(course);
+            return RedirectToAction(nameof(Index));
         }
 
-        // =================== SEARCH ===================
-        [HttpGet]
-        public async Task<IActionResult> Search(string query)
-        {
-            if (string.IsNullOrWhiteSpace(query))
-                return RedirectToAction("Index");
-
-            query = query.Trim().ToLower();
-
-            var results = await _context.CoursesDb
-                .Where(c =>
-                    (!string.IsNullOrEmpty(c.CourseName) && c.CourseName.ToLower().Contains(query)) ||
-                    (!string.IsNullOrEmpty(c.CourseCode) && c.CourseCode.ToLower().Contains(query))
-                )
-                .ToListAsync();
-
-            // Truyền thêm query để hiển thị lại ô input
-            ViewBag.SearchQuery = query;
-
-            return View("Index", results);
-        }
-
-        // =================== DELETE ===================
         public async Task<IActionResult> Delete(int id)
         {
-            var course = await _context.CoursesDb.FindAsync(id);
+            var course = await _courseService.GetByIdAsync(id);
             if (course == null) return NotFound();
 
             return View(course);
@@ -101,14 +62,10 @@ namespace WebSIMS.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            var course = await _context.CoursesDb.FindAsync(id);
-            if (course != null)
-            {
-                _context.CoursesDb.Remove(course);
-                await _context.SaveChangesAsync();
-            }
+            var result = await _courseService.DeleteAsync(id);
+            if (!result) return NotFound();
 
-            return RedirectToAction("Index");
+            return RedirectToAction(nameof(Index));
         }
     }
 }
