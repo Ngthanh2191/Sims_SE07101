@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using WebSIMS.BDContext.Entities;
+using WebSIMS.Models;
 
 namespace WebSIMS.BDContext
 {
@@ -9,10 +10,11 @@ namespace WebSIMS.BDContext
 
         public DbSet<Courses> CoursesDb { get; set; }
         public DbSet<Users> UsersDb { get; set; }
+        public DbSet<Student> StudentsDb { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            // tale Users
+            // table Users
             modelBuilder.Entity<Users>().ToTable("Users");
             modelBuilder.Entity<Users>().HasKey("UserID");
             modelBuilder.Entity<Users>().HasIndex("Username").IsUnique();
@@ -22,6 +24,17 @@ namespace WebSIMS.BDContext
             modelBuilder.Entity<Courses>().ToTable("Courses");
             modelBuilder.Entity<Courses>().HasKey("CourseID");
             modelBuilder.Entity<Courses>().HasIndex("CourseCode").IsUnique();
+
+            // table Students 
+            modelBuilder.Entity<Student>().ToTable("Students");
+            modelBuilder.Entity<Student>().HasKey(s => s.StudentID);
+            
+
+            // Relationship
+            modelBuilder.Entity<Student>()
+                .HasOne(s => s.User)
+                .WithMany()
+                .HasForeignKey("UserID");
         }
     }
 }
